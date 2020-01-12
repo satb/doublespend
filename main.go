@@ -1,20 +1,25 @@
 package main
 
-import (
-	"log"
-
-	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/satb/doublespend/eth"
-)
-
 func main() {
-	client, err := ethclient.Dial("http://127.0.0.1:8101")
+	// client, err := ethclient.Dial("http://127.0.0.1:8101")
 	// client, err := ethclient.Dial("/tmp/eth/60/01/geth.ipc")
 	// account := common.HexToAddress("0x71c7656ec7ab88b098defb751b7401b5f6d8976f")
 
-	if err != nil {
-		log.Fatal(err)
-	}
+	// client, err := ethclient.Dial("https://mainnet.infura.io")
+
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// wssClient, err := ethclient.Dial("ws://127.0.0.1:4101")
+	// client, err := ethclient.Dial("/tmp/eth/60/01/geth.ipc")
+	// account := common.HexToAddress("0x71c7656ec7ab88b098defb751b7401b5f6d8976f")
+
+	// client, err := ethclient.Dial("https://mainnet.infura.io")
+
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	// fmt.Println("we have a connection")
 
@@ -50,5 +55,9 @@ func main() {
 
 	// log.Println(string(body))
 
-	eth.ScanBlocks(client, "0xFB9931c331f8119E406E1307A896a09029151277", 9231655, 9231658)
+	// txns := Scan(client, "0x69259375afd0944fa345f9430b3cde078ab0eb76")
+	// log.Fatal(txns)
+
+	// fmt.Println("Subscribing to blocks")
+	// Subscribe(wssClient)
 }

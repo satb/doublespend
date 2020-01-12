@@ -11,14 +11,19 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-func Scan(client *ethclient.Client, addresses []string) map[string][]*types.Transaction {
+type TxnInfo struct {
+	Txn      *types.Transaction
+	BlockNum int64
+}
+
+func Scan(client *ethclient.Client, addresses []string) map[string][]*TxnInfo {
 	topHeader := topHeader(client)
 	headerNumber := topHeader.Number.Int64()
 	return ScanBlocks(client, addresses, 0, headerNumber)
 }
 
-func ScanBlocks(client *ethclient.Client, addresses []string, fromBlock int64, toBlock int64) map[string][]*types.Transaction {
-	txnMap := make(map[string][]*types.Transaction)
+func ScanBlocks(client *ethclient.Client, addresses []string, fromBlock int64, toBlock int64) map[string][]*TxnInfo {
+	txnMap := make(map[string][]*TxnInfo)
 	var i int64
 	for i = fromBlock; i < toBlock; i++ {
 		blockNumber := big.NewInt(i)
@@ -35,15 +40,15 @@ func ScanBlocks(client *ethclient.Client, addresses []string, fromBlock int64, t
 			}
 			if msg, err := tx.AsMessage(types.NewEIP155Signer(chainID)); err == nil {
 				from := strings.ToLower(msg.From().Hex())
-				var txns []*types.Transaction
+				var txns []*TxnInfo
 				_, found := find(addresses, from)
 				if found {
 					fmt.Println("Found txn ", tx.Hash().Hex(), " during block scan for ", from)
 					txnList := txnMap[msg.From().Hex()]
 					if txnList == nil {
-						txns = make([]*types.Transaction, 0)
+						txns = make([]*TxnInfo, 0)
 					}
-					txns = append(txns, tx)
+					txns = append(txns, &TxnInfo{Txn: tx, BlockNum: block.Number().Int64()})
 					txnMap[from] = txns
 				}
 			}

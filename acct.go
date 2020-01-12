@@ -91,7 +91,7 @@ func ToEth(value *big.Int) *big.Float {
 	return ethValue
 }
 
-func processNewBlock(client *ethclient.Client, addresses []string, txnMap map[string][]*types.Transaction, block *types.Block) {
+func processNewBlock(client *ethclient.Client, addresses []string, txnMap map[string][]*TxnInfo, block *types.Block) {
 	log.Println("Processing new block with ", block.Transactions().Len(), " transactions in blockNumber", block.Number().Int64())
 	//Get the txn receipt for the most recent 2 tx in the map, get the block hash, check if it is still valid and if not, log double spend
 	for _, address := range addresses {
@@ -99,7 +99,7 @@ func processNewBlock(client *ethclient.Client, addresses []string, txnMap map[st
 		if txnMap[addr] != nil {
 			//grab the most recent txn
 			tx := txnMap[addr][len(txnMap[addr])-1]
-			_, err := GetTxnReceipt(client, tx.Hash())
+			_, err := GetTxnReceipt(client, tx.Txn.Hash())
 			if err != nil && err == ethereum.NotFound {
 				log.Println("**********DOUBLE SPEND DETECTED FOR ", addr, " ********")
 			}
@@ -108,7 +108,7 @@ func processNewBlock(client *ethclient.Client, addresses []string, txnMap map[st
 	appendTxn(client, addresses, txnMap, block)
 }
 
-func appendTxn(client *ethclient.Client, addresses []string, txnMap map[string][]*types.Transaction, block *types.Block) {
+func appendTxn(client *ethclient.Client, addresses []string, txnMap map[string][]*TxnInfo, block *types.Block) {
 	for _, tx := range block.Transactions() {
 		chainID, err := client.NetworkID(context.Background())
 		if err != nil {
@@ -119,27 +119,28 @@ func appendTxn(client *ethclient.Client, addresses []string, txnMap map[string][
 			from := strings.ToLower(msg.From().Hex())
 			_, found := find(addresses, from)
 			if found {
+				txnInfo := TxnInfo{Txn: tx, BlockNum: block.Number().Int64()}
 				if txnMap[from] != nil {
-					txnMap[from] = append(txnMap[from], tx)
+					txnMap[from] = append(txnMap[from], &txnInfo)
 				} else {
-					txnMap[from] = []*types.Transaction{tx}
+					txnMap[from] = []*TxnInfo{&txnInfo}
 				}
 			}
 		}
 	}
 }
 
-func printTxnMap(txnMap map[string][]*types.Transaction) {
+func printTxnMap(txnMap map[string][]*TxnInfo) {
 	for k, v := range txnMap {
 		fmt.Println("txnMap has address ", k, " and transactions ", printTxns(v))
 	}
 }
 
-func printTxns(txns []*types.Transaction) string {
+func printTxns(txns []*TxnInfo) string {
 	result := ""
 	if txns != nil {
 		for _, txn := range txns {
-			result += txn.Hash().Hex()
+			result += txn.Txn.Hash().Hex()
 			result += ","
 		}
 	}

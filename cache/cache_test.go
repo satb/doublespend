@@ -133,12 +133,12 @@ func TestUpdateItem(t *testing.T) {
 	item3 := item1
 	item3.Id = "id3"
 	item3.From = "from3"
-	c.UpdateItem(key, item1.Id, item3)
+	c.UpdateItem(key, item3)
 
 	item4 := item1
 	item4.Id = "id4"
 	item4.From = "from4"
-	c.UpdateItem(key, item2.Id, item4)
+	c.UpdateItem(key, item4)
 	it1 := c.Get(key)[0]
 	it2 := c.Get(key)[1]
 	if it1.Id != "id3" || it1.From != "from3" || it2.Id != "id4" || it2.From != "from4" {

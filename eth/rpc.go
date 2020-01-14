@@ -23,7 +23,7 @@ type ethResponse struct {
 	Error   *EthError       `json:"error"`
 }
 
-func GetNodeInfo(clientUrl string) p2p.NodeInfo {
+func getNodeInfo(clientUrl string) p2p.NodeInfo {
 	id := uuid.New()
 	message := map[string]interface{}{
 		"id":      id.String(),
@@ -60,7 +60,7 @@ func GetNodeInfo(clientUrl string) p2p.NodeInfo {
 	return nodeInfo
 }
 
-func SetEtherBase(clientUrl string, address string) {
+func setEtherBase(clientUrl string, address string) {
 	id := uuid.New()
 	params := [...]string{address}
 	message := map[string]interface{}{
@@ -88,7 +88,7 @@ func SetEtherBase(clientUrl string, address string) {
 	log.Println(string(body))
 }
 
-func AddPeer(clientUrl string, peerEnode string) {
+func addPeer(clientUrl string, peerEnode string) {
 	id := uuid.New()
 	params := [...]string{peerEnode}
 	message := map[string]interface{}{
@@ -116,7 +116,7 @@ func AddPeer(clientUrl string, peerEnode string) {
 	log.Println(string(body))
 }
 
-func RemovePeer(clientUrl string, peerEnode string) {
+func removePeer(clientUrl string, peerEnode string) {
 	id := uuid.New()
 	params := [...]string{peerEnode}
 	message := map[string]interface{}{
@@ -144,7 +144,7 @@ func RemovePeer(clientUrl string, peerEnode string) {
 	log.Println(string(body))
 }
 
-func StartMining(clientUrl string, numThreads int) {
+func startMining(clientUrl string, numThreads int) {
 	id := uuid.New()
 	params := [...]int{numThreads}
 	message := map[string]interface{}{
@@ -172,7 +172,7 @@ func StartMining(clientUrl string, numThreads int) {
 	log.Println(string(body))
 }
 
-func StopMining(clientUrl string) {
+func stopMining(clientUrl string) {
 	id := uuid.New()
 	params := [...]int{}
 	message := map[string]interface{}{

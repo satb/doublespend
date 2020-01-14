@@ -48,7 +48,7 @@ func CreateAccount() Account {
 /*
 Returns ETH balance
 */
-func GetBalance(client *ethclient.Client, address string) int64 {
+func getBalance(client *ethclient.Client, address string) int64 {
 	account := common.HexToAddress(address)
 	balance, err := client.BalanceAt(context.Background(), account, nil)
 	if err != nil {

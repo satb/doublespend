@@ -14,7 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-func Transfer(client *ethclient.Client, from Account, to string, ethAmount int64) (txn *types.Transaction, err error) {
+func transfer(client *ethclient.Client, from Account, to string, ethAmount int64) (txn *types.Transaction, err error) {
 	privateKey, err := crypto.HexToECDSA(from.PrivateKey)
 	if err != nil {
 		log.Fatal(err)
@@ -59,25 +59,6 @@ func Transfer(client *ethclient.Client, from Account, to string, ethAmount int64
 	return signedTx, err
 }
 
-func GetTxnReceipt(client *ethclient.Client, hash common.Hash) (receipt *types.Receipt, err error) {
+func getTxnReceipt(client *ethclient.Client, hash common.Hash) (receipt *types.Receipt, err error) {
 	return client.TransactionReceipt(context.Background(), hash)
-}
-
-func topHeader(client *ethclient.Client) *types.Header {
-	header, err := client.HeaderByNumber(context.Background(), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return header
-}
-
-// Find takes a slice and looks for an element in it. If found it will
-// return it's key, otherwise it will return -1 and a bool of false.
-func find(slice []string, val string) (int, bool) {
-	for i, item := range slice {
-		if strings.ToLower(item) == val {
-			return i, true
-		}
-	}
-	return -1, false
 }

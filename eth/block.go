@@ -9,13 +9,7 @@ import (
 	"strings"
 )
 
-//type TxnInfo struct {
-//	Txn         *types.Transaction
-//	BlockNum    int64
-//	DoubleSpent bool
-//}
-
-func GetBlock(client *ethclient.Client, blockNum int64) (block *types.Block, err error) {
+func getBlock(client *ethclient.Client, blockNum int64) (block *types.Block, err error) {
 	blockNumber := big.NewInt(blockNum)
 	return client.BlockByNumber(context.Background(), blockNumber)
 }
@@ -28,7 +22,7 @@ func scan(client *ethclient.Client, addresses []string) {
 	}
 	var i int64
 	for i = 0; i < header.Number.Int64(); i++ {
-		block, err := GetBlock(client, i)
+		block, err := getBlock(client, i)
 		if err != nil {
 			log.Println(err)
 			continue

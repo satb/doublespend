@@ -59,17 +59,17 @@ func TestDoubleSpend(t *testing.T) {
 
 	fmt.Println("Created addresses for malice, bob, jane, eb1, eb2", malice.Address, bob.Address, jane.Address, eb1.Address, eb2.Address)
 
-	SetEtherBase(client1Url, malice.Address)
-	SetEtherBase(client2Url, bob.Address)
+	setEtherBase(client1Url, malice.Address)
+	setEtherBase(client2Url, bob.Address)
 
 	fmt.Println("Fetching node information for client2")
-	nodeInfo2 := GetNodeInfo(client2Url)
+	nodeInfo2 := getNodeInfo(client2Url)
 	fmt.Println("Adding client2 as peer of client1")
-	AddPeer(client1Url, nodeInfo2.Enode)
+	addPeer(client1Url, nodeInfo2.Enode)
 
 	fmt.Println("Starting mining")
-	StartMining(client1Url, 1)
-	StartMining(client2Url, 1)
+	startMining(client1Url, 1)
+	startMining(client2Url, 1)
 	fmt.Println("Started mining on both clients")
 
 	//sleep 20 seconds to accumulate eth and stop mining
@@ -77,22 +77,22 @@ func TestDoubleSpend(t *testing.T) {
 	time.Sleep(20 * time.Second)
 
 	fmt.Println("After 20 seconds...")
-	maliceNode2Balance := GetBalance(client2, malice.Address)
+	maliceNode2Balance := getBalance(client2, malice.Address)
 	fmt.Println("On node2 malice balance=", maliceNode2Balance)
 
-	maliceNode1Balance := GetBalance(client1, malice.Address)
+	maliceNode1Balance := getBalance(client1, malice.Address)
 	fmt.Println("On node1 malice balance=", maliceNode1Balance)
 
-	StopMining(client1Url)
-	StopMining(client2Url)
+	stopMining(client1Url)
+	stopMining(client2Url)
 
 	fmt.Println("Stopped mining on both nodes")
 
 	//set etherbase to eb1 and eb2 before mining again
-	SetEtherBase(client1Url, eb1.Address)
-	SetEtherBase(client2Url, eb2.Address)
+	setEtherBase(client1Url, eb1.Address)
+	setEtherBase(client2Url, eb2.Address)
 
-	maliceBalance := GetBalance(client1, malice.Address)
+	maliceBalance := getBalance(client1, malice.Address)
 	if maliceBalance <= 0 {
 		t.Log("Malice account balance is 0")
 		t.FailNow()
@@ -102,7 +102,7 @@ func TestDoubleSpend(t *testing.T) {
 
 	fmt.Println("Removing client2 as the peer of client1")
 	//Remove peers now
-	RemovePeer(client1Url, nodeInfo2.Enode)
+	removePeer(client1Url, nodeInfo2.Enode)
 	fmt.Println("Removed client2 as the peer of client1")
 
 	//wait 2 second
@@ -111,43 +111,43 @@ func TestDoubleSpend(t *testing.T) {
 	//transfer 50% of the balance to the good client (client2)
 	maliceTxAmount := maliceBalance / 2
 
-	maliceNode2BalanceBeforeMiningStart := GetBalance(client2, malice.Address)
+	maliceNode2BalanceBeforeMiningStart := getBalance(client2, malice.Address)
 	fmt.Println("Before transferring maliceBalance from node2 ", maliceNode2BalanceBeforeMiningStart)
 	fmt.Println("Transferring from malice to bob on node2 amount of ", maliceTxAmount)
-	tx, err := Transfer(client2, malice, bob.Address, maliceTxAmount)
+	tx, err := transfer(client2, malice, bob.Address, maliceTxAmount)
 	if err != nil {
 		t.Log("Signing of txn failed")
 		t.Fail()
 	}
 	fmt.Println("Transferred from malice to bob amount of ", maliceTxAmount)
 	fmt.Println("Started mining on node2. Waiting for 10 seconds for more blocks to be mined")
-	StartMining(client2Url, 2)
+	startMining(client2Url, 2)
 	time.Sleep(10 * time.Second)
-	StopMining(client2Url)
+	stopMining(client2Url)
 	fmt.Println("Stopped mining after 10 seconds on node2...")
 
-	maliceNode2Balance = GetBalance(client2, malice.Address)
+	maliceNode2Balance = getBalance(client2, malice.Address)
 	fmt.Println("On node2 malice balance=", maliceNode2Balance)
 
 	if maliceNode2BalanceBeforeMiningStart == maliceNode2Balance {
 		t.Log("Balance has not reduced after transfer for malice")
 		t.FailNow()
 	}
-	maliceTxnReceipt, err := GetTxnReceipt(client2, tx.Hash())
+	maliceTxnReceipt, err := getTxnReceipt(client2, tx.Hash())
 	if err != nil || maliceTxnReceipt == nil {
 		t.Log("Cannot find transaction receipt for ", tx.Hash().Hex())
 		t.FailNow()
 	}
 	fmt.Println("Recorded txn ", tx.Hash().Hex(), " in blockNumber=", maliceTxnReceipt.BlockNumber.Int64())
 
-	b, err := GetBlock(client2, maliceTxnReceipt.BlockNumber.Int64())
+	b, err := getBlock(client2, maliceTxnReceipt.BlockNumber.Int64())
 	if err != nil {
 		t.Log("Cannot find transaction", tx.Hash().Hex(), "in block", b.Number().Int64())
 		t.FailNow()
 	} else {
 		fmt.Println("Found transaction", tx.Hash().Hex(), "in block", b.Number().Int64())
 	}
-	maliceNode1Balance = GetBalance(client1, malice.Address)
+	maliceNode1Balance = getBalance(client1, malice.Address)
 	fmt.Println("On node1 malice balance=", maliceNode1Balance)
 
 	fmt.Println("Starting monitoring on node2 for malice address ", malice.Address)
@@ -161,17 +161,17 @@ func TestDoubleSpend(t *testing.T) {
 	//transfer 80% of malice's balance to Jane on node 1 (malicious node)
 	var doubleSpendMaliceTxAmount = int64(float64(maliceBalance) * 0.8)
 	fmt.Println("Now sending the double spend to node1 txn of ", doubleSpendMaliceTxAmount)
-	tx, err = Transfer(client1, malice, jane.Address, doubleSpendMaliceTxAmount)
+	tx, err = transfer(client1, malice, jane.Address, doubleSpendMaliceTxAmount)
 
-	maliceNode2Balance = GetBalance(client2, malice.Address)
+	maliceNode2Balance = getBalance(client2, malice.Address)
 	fmt.Println("On node2 malice balance=", maliceNode2Balance)
 
-	maliceNode1Balance = GetBalance(client1, malice.Address)
+	maliceNode1Balance = getBalance(client1, malice.Address)
 	fmt.Println("On node1 malice balance=", maliceNode1Balance)
 
 	//start mining again - very fast on node 1 so it can add more blocks and overpower node 2
-	StartMining(client1Url, 10)
-	StartMining(client2Url, 1)
+	startMining(client1Url, 10)
+	startMining(client2Url, 1)
 
 	fmt.Println("Started mining on both nodes....very fast on node1 and someone slowly on node2")
 
@@ -179,7 +179,7 @@ func TestDoubleSpend(t *testing.T) {
 	//Wait for 30 seconds so node 1 adds more blocks because it has less difficulty
 	time.Sleep(30 * time.Second)
 
-	maliceTxnReceipt, err = GetTxnReceipt(client1, tx.Hash())
+	maliceTxnReceipt, err = getTxnReceipt(client1, tx.Hash())
 	if err != nil || maliceTxnReceipt == nil {
 		t.Log("Could not fetch txn receipt for txn=", tx.Hash().Hex())
 		t.FailNow()
@@ -187,31 +187,31 @@ func TestDoubleSpend(t *testing.T) {
 
 	fmt.Println("Recorded double spend txn ", tx.Hash().Hex(), " in blockNumber=", maliceTxnReceipt.BlockNumber.Int64())
 
-	maliceNode2Balance = GetBalance(client2, malice.Address)
+	maliceNode2Balance = getBalance(client2, malice.Address)
 	fmt.Println("Before adding peer of node2 on node1, on node2 malice balance=", maliceNode2Balance)
 
-	maliceNode1Balance = GetBalance(client1, malice.Address)
+	maliceNode1Balance = getBalance(client1, malice.Address)
 	fmt.Println("Before adding peer of nod1 on node2, on node1 malice balance=", maliceNode1Balance)
 
 	fmt.Println("Adding node2 as peer of node1 again")
 	//now add the node 2 as peer to node 1 so the network syncs again
-	AddPeer(client1Url, nodeInfo2.Enode)
+	addPeer(client1Url, nodeInfo2.Enode)
 
 	//we should see the double spend being logged
 	time.Sleep(20 * time.Second)
 
 	fmt.Println("After 20 sec...")
 
-	maliceNode2Balance = GetBalance(client2, malice.Address)
+	maliceNode2Balance = getBalance(client2, malice.Address)
 	fmt.Println("On node2 malice balance=", maliceNode2Balance)
 
-	maliceNode1Balance = GetBalance(client1, malice.Address)
+	maliceNode1Balance = getBalance(client1, malice.Address)
 	fmt.Println("On node1 malice balance=", maliceNode1Balance)
 
 	fmt.Println("Removing node2 as peer of node1 to reset to original state")
-	RemovePeer(client1Url, nodeInfo2.Enode)
+	removePeer(client1Url, nodeInfo2.Enode)
 
-	StopMining(client1Url)
-	StopMining(client2Url)
+	stopMining(client1Url)
+	stopMining(client2Url)
 	fmt.Println("Stopped mining on all nodes")
 }

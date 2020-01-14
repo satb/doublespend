@@ -76,13 +76,13 @@ func (cache *Cache) Del(key string) {
 	}
 }
 
-func (cache *Cache) UpdateItem(key string, id string, updatedItem Item) {
+func (cache *Cache) UpdateItem(key string, updatedItem Item) {
 	cache.rwm.Lock()
 	defer cache.rwm.Unlock()
 	items := cache.store[key]
 	var it *Item
 	for _, item := range items {
-		if item.Id == id {
+		if item.Id == updatedItem.Id {
 			it = &item
 			break
 		}
@@ -90,7 +90,7 @@ func (cache *Cache) UpdateItem(key string, id string, updatedItem Item) {
 	if it != nil {
 		newList := make([]Item, 0)
 		for _, item := range items {
-			if item.Id == id {
+			if item.Id == updatedItem.Id {
 				newList = append(newList, updatedItem)
 			} else {
 				newList = append(newList, item)
@@ -98,7 +98,7 @@ func (cache *Cache) UpdateItem(key string, id string, updatedItem Item) {
 		}
 		cache.store[key] = newList
 	} else {
-		log.Println("Could not find transaction with key=", key, " and id=", id)
+		log.Println("Could not find transaction with key=", key, " and id=", updatedItem.Id)
 	}
 }
 

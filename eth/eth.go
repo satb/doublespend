@@ -27,37 +27,55 @@ func Monitor(wssClient *ethclient.Client, httpClient *ethclient.Client, addresse
 	go func() {
 		for {
 			block := <-messages
-			go processBlock(httpClient, addresses, block, ch)
+			processBlock(httpClient, addresses, block, ch)
 		}
 	}()
 }
 
+/**
+On the arrival of the new block, this function is responsible for
+1. Looping through the previously cached transactions
+2. If the transaction receipt for any of them is NOT found
+	a. if the transaction was not already marked as double spent
+    b. update the cache marking the transaction as double spent
+    c. send a message on the channel that the transaction was double spent
+3. If the transaction receipt for any of them IS found and the transaction was marked double spent
+	a. mark the transaction as NOT double spent
+    b. update the cache marking the transaction as NOT double spent
+    c. send a message on the channel that the transaction was not double spent
+4. Add the new transactions, if any, that originated from the set of addresses of interest
+*/
 func processBlock(client *ethclient.Client, addresses []string, block *types.Block, ch chan<- cache.Item) {
 	for _, address := range addresses {
 		addr := strings.ToLower(address)
 		if ethCache.Get(addr) != nil {
 			for _, tx := range ethCache.Get(addr) {
-				_, err := GetTxnReceipt(client, common.HexToHash(tx.Id))
+				_, err := getTxnReceipt(client, common.HexToHash(tx.Id))
 				if err != nil && err == ethereum.NotFound {
-					tx.DoubleSpend = true
-					log.Println("DOUBLE SPEND DETECTED - address=", addr)
-					ethCache.UpdateItem(addr, tx.Id, tx)
-					ch <- tx
-				} else {
+					if tx.DoubleSpend == false {
+						tx.DoubleSpend = true
+						log.Println("DOUBLE SPEND DETECTED - address=", addr, "txnId=", tx.Id, "block=", tx.BlockNum)
+						ethCache.UpdateItem(addr, tx)
+						ch <- tx
+					}
+				} else if err != nil {
 					if tx.DoubleSpend {
 						//Revert the transaction which was marked as double spend
 						tx.DoubleSpend = false
-						ethCache.UpdateItem(addr, tx.Id, tx)
+						ethCache.UpdateItem(addr, tx)
 						ch <- tx
 					}
+				} else {
+					log.Println(err)
 				}
 			}
 		}
 	}
-	updateCache(client, addresses, block)
+	purgeCache(addresses)
+	cacheNewTxs(client, addresses, block)
 }
 
-func updateCache(client *ethclient.Client, addresses []string, block *types.Block) {
+func cacheNewTxs(client *ethclient.Client, addresses []string, block *types.Block) {
 	for _, tx := range block.Transactions() {
 		chainID, err := client.NetworkID(context.Background())
 		if err != nil {
@@ -72,18 +90,4 @@ func updateCache(client *ethclient.Client, addresses []string, block *types.Bloc
 			}
 		}
 	}
-}
-
-func cacheTxn(from string, tx *types.Transaction, block *types.Block) {
-	log.Println("Caching new txn with id ", tx.Hash().Hex())
-	blockNumber := block.Number()
-	ethCache.AddItem(from, cache.Item{
-		Id:          tx.Hash().Hex(),
-		From:        from,
-		To:          tx.To().Hex(),
-		Amount:      *tx.Value(),
-		BlockNum:    blockNumber.Int64(),
-		Time:        block.Header().Time,
-		DoubleSpend: false,
-	})
 }

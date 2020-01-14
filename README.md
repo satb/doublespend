@@ -56,8 +56,9 @@ This project simulates a double spend on a local 2 node ethereum network. The se
     * Start mining on node1 and node2. However, Malice will try to overcome the hashpower of the rest of the network. So node1 will mine with far more threads than node2.
     * Then, node2 is added as a peer of node1 again.
     * TADA - Double spend detected
-      * Internally, when the full blockchain scan happens for Malice's address, it keeps the history of Malice's transactions done
+      * Internally, when the full blockchain scan happens for Malice's address, it keeps the history of Malice's transactions done **for the last 24 hrs**
       * When new block notifications arrive, all cached transactions are run through and the transaction receipt fetched. 
       * If the transaction receipt cannot be fetched anymore, it is deemed a doublespend.
       * The newly arrived transactions are then added to the cache again if they are of interest to the system.
+      * The cache is purged if it has transactions beyond 24 hrs for any of the addresses that are of interest
 

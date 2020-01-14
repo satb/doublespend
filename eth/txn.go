@@ -1,4 +1,4 @@
-package main
+package eth
 
 import (
 	"context"
@@ -13,17 +13,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
-
-// var n = eth.blocknumber;
-
-// var txs = [];
-// for(var i = 0; i < n; i++) {
-//     var block = eth.getBlock(i, true);
-//     for(var j = 0; j < block.transactions; j++) {
-//         if( block.transactions[j].to == the_address )
-//             txs.push(block.transactions[j]);
-//     }
-// }
 
 func Transfer(client *ethclient.Client, from Account, to string, ethAmount int64) (txn *types.Transaction, err error) {
 	privateKey, err := crypto.HexToECDSA(from.PrivateKey)
@@ -66,7 +55,7 @@ func Transfer(client *ethclient.Client, from Account, to string, ethAmount int64
 		log.Fatal(err)
 	}
 
-	fmt.Println("Txn sent - txId=", signedTx.Hash().Hex())
+	fmt.Println("Txn sent - txId=", signedTx.Hash().Hex(), " from=", strings.ToLower(fromAddress.Hex()))
 	return signedTx, err
 }
 

@@ -19,11 +19,11 @@ import (
 
 type Cache struct {
 	RetentionPeriod uint64
-	store           map[string][]CacheItem
+	store           map[string][]Item
 	rwm             sync.RWMutex
 }
 
-type CacheItem struct {
+type Item struct {
 	Id          string
 	From        string
 	To          string
@@ -33,15 +33,15 @@ type CacheItem struct {
 	DoubleSpend bool
 }
 
-type updateFn func(CacheItem) CacheItem
+type updateFn func(Item) Item
 
-const CACHE_ITEM_SIZE = 0
-const DEFAULT_RETAIN_PERIOD uint64 = 24 * 60 * 60 * 1000
+const ItemSize = 0
+const DefaultRetainPeriod uint64 = 24 * 60 * 60 * 1000
 
 func New() *Cache {
 	return &Cache{
-		RetentionPeriod: DEFAULT_RETAIN_PERIOD,
-		store:           make(map[string][]CacheItem),
+		RetentionPeriod: DefaultRetainPeriod,
+		store:           make(map[string][]Item),
 	}
 }
 
@@ -52,18 +52,18 @@ The reason for doing so is because the item can be purged while the consumer of 
 item might be working on it. Working with copies makes it safe to return the item
 to the clients that are free to do anything they want thereafter with the item
 */
-func (cache *Cache) Get(key string) []CacheItem {
+func (cache *Cache) Get(key string) []Item {
 	cache.rwm.RLock()
 	defer cache.rwm.RUnlock()
-	return append([]CacheItem(nil), cache.store[key]...)
+	return append([]Item(nil), cache.store[key]...)
 }
 
-func (cache *Cache) AddItem(key string, item CacheItem) {
+func (cache *Cache) AddItem(key string, item Item) {
 	cache.rwm.Lock()
 	defer cache.rwm.Unlock()
 	list := cache.store[key]
 	if list == nil {
-		list = make([]CacheItem, CACHE_ITEM_SIZE)
+		list = make([]Item, ItemSize)
 	}
 	cache.store[key] = append(list, item)
 }
@@ -76,11 +76,11 @@ func (cache *Cache) Del(key string) {
 	}
 }
 
-func (cache *Cache) UpdateItem(key string, id string, fn updateFn) {
+func (cache *Cache) UpdateItem(key string, id string, updatedItem Item) {
 	cache.rwm.Lock()
 	defer cache.rwm.Unlock()
 	items := cache.store[key]
-	var it *CacheItem
+	var it *Item
 	for _, item := range items {
 		if item.Id == id {
 			it = &item
@@ -88,8 +88,7 @@ func (cache *Cache) UpdateItem(key string, id string, fn updateFn) {
 		}
 	}
 	if it != nil {
-		updatedItem := fn(*it)
-		newList := make([]CacheItem, 0)
+		newList := make([]Item, 0)
 		for _, item := range items {
 			if item.Id == id {
 				newList = append(newList, updatedItem)
@@ -108,7 +107,7 @@ Returns the item associated with the given key and the id.
 The key is the index into the map and the id is the identifier for the item
 being requested.
 */
-func (cache *Cache) GetItem(key string, id string) (item CacheItem, err error) {
+func (cache *Cache) GetItem(key string, id string) (item Item, err error) {
 	cache.rwm.RLock()
 	defer cache.rwm.RUnlock()
 	items := cache.store[key]
@@ -117,7 +116,7 @@ func (cache *Cache) GetItem(key string, id string) (item CacheItem, err error) {
 			return item, nil
 		}
 	}
-	return CacheItem{}, errors.New("Not found")
+	return Item{}, errors.New("not found")
 }
 
 /**
@@ -149,7 +148,7 @@ func (cache *Cache) deleteItems(key string, ids []string) {
 	cache.rwm.Lock()
 	defer cache.rwm.Unlock()
 	if items, ok := cache.store[key]; ok {
-		newItems := make([]CacheItem, CACHE_ITEM_SIZE)
+		newItems := make([]Item, ItemSize)
 		for _, item := range items {
 			found := false
 			for _, id := range ids {
@@ -172,5 +171,5 @@ Clears the cache completely. Useful for tests but not so much for real use
 func (cache *Cache) clear() {
 	cache.rwm.Lock()
 	defer cache.rwm.Unlock()
-	cache.store = make(map[string][]CacheItem)
+	cache.store = make(map[string][]Item)
 }

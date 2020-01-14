@@ -9,14 +9,23 @@ import (
 var c = New()
 
 func setup() {
-	c.RetentionPeriod = DEFAULT_RETAIN_PERIOD
+	c.RetentionPeriod = DefaultRetainPeriod
 	c.clear()
+}
+
+func TestGetWithEmptyCache(t *testing.T) {
+	setup()
+	key := "0x00"
+	if c.Get(key) != nil {
+		t.Log("Getting item from empty cache failed")
+		t.Fail()
+	}
 }
 
 func TestAddItem(t *testing.T) {
 	setup()
 	key := "0x00"
-	item := CacheItem{
+	item := Item{
 		Id:       "id1",
 		From:     "from1",
 		To:       "to1",
@@ -33,7 +42,7 @@ func TestAddItem(t *testing.T) {
 func TestDel(t *testing.T) {
 	setup()
 	key := "0x00"
-	item := CacheItem{
+	item := Item{
 		Id:       "id1",
 		From:     "from1",
 		To:       "to1",
@@ -51,14 +60,14 @@ func TestDel(t *testing.T) {
 func TestAddItems(t *testing.T) {
 	setup()
 	key := "0x00"
-	item1 := CacheItem{
+	item1 := Item{
 		Id:       "id1",
 		From:     "from1",
 		To:       "to1",
 		Amount:   *new(big.Int).SetInt64(10),
 		BlockNum: 10,
 	}
-	item2 := CacheItem{
+	item2 := Item{
 		Id:       "id2",
 		From:     "from2",
 		To:       "to2",
@@ -68,7 +77,7 @@ func TestAddItems(t *testing.T) {
 	c.AddItem(key, item1)
 	c.AddItem(key, item2)
 	items := c.Get(key)
-	if items == nil || len(items) != CACHE_ITEM_SIZE+2 {
+	if items == nil || len(items) != ItemSize+2 {
 		t.Log("AddItems failed")
 		t.Fail()
 	}
@@ -77,14 +86,14 @@ func TestAddItems(t *testing.T) {
 func TestDeleteItems(t *testing.T) {
 	setup()
 	key := "0x00"
-	item1 := CacheItem{
+	item1 := Item{
 		Id:       "id1",
 		From:     "from1",
 		To:       "to1",
 		Amount:   *new(big.Int).SetInt64(10),
 		BlockNum: 10,
 	}
-	item2 := CacheItem{
+	item2 := Item{
 		Id:       "id2",
 		From:     "from2",
 		To:       "to2",
@@ -95,7 +104,7 @@ func TestDeleteItems(t *testing.T) {
 	c.AddItem(key, item2)
 	c.deleteItems(key, []string{item1.Id})
 	items := c.Get(key)
-	if items == nil || len(items) != CACHE_ITEM_SIZE+1 || items[0].Id != "id2" {
+	if items == nil || len(items) != ItemSize+1 || items[0].Id != "id2" {
 		t.Log("Failed to delete items")
 		t.Fail()
 	}
@@ -104,14 +113,14 @@ func TestDeleteItems(t *testing.T) {
 func TestUpdateItem(t *testing.T) {
 	setup()
 	key := "0x00"
-	item1 := CacheItem{
+	item1 := Item{
 		Id:       "id1",
 		From:     "from1",
 		To:       "to1",
 		Amount:   *new(big.Int).SetInt64(10),
 		BlockNum: 10,
 	}
-	item2 := CacheItem{
+	item2 := Item{
 		Id:       "id2",
 		From:     "from2",
 		To:       "to2",
@@ -120,16 +129,16 @@ func TestUpdateItem(t *testing.T) {
 	}
 	c.AddItem(key, item1)
 	c.AddItem(key, item2)
-	c.UpdateItem(key, item1.Id, func(ci CacheItem) CacheItem {
-		ci.Id = "id3"
-		ci.From = "from3"
-		return ci
-	})
-	c.UpdateItem(key, item2.Id, func(ci CacheItem) CacheItem {
-		ci.Id = "id4"
-		ci.From = "from4"
-		return ci
-	})
+
+	item3 := item1
+	item3.Id = "id3"
+	item3.From = "from3"
+	c.UpdateItem(key, item1.Id, item3)
+
+	item4 := item1
+	item4.Id = "id4"
+	item4.From = "from4"
+	c.UpdateItem(key, item2.Id, item4)
 	it1 := c.Get(key)[0]
 	it2 := c.Get(key)[1]
 	if it1.Id != "id3" || it1.From != "from3" || it2.Id != "id4" || it2.From != "from4" {
@@ -141,7 +150,7 @@ func TestUpdateItem(t *testing.T) {
 func TestPurge(t *testing.T) {
 	setup()
 	key := "0x00"
-	item := CacheItem{
+	item := Item{
 		Id:       "id1",
 		From:     "from1",
 		To:       "to1",

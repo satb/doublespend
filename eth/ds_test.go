@@ -1,7 +1,8 @@
-package main
+package eth
 
 import (
 	"fmt"
+	"github.com/satb/doublespend/cache"
 	"testing"
 	"time"
 
@@ -20,7 +21,7 @@ import (
 * Stop mining
 * Set etherbase accounts for node 1 and node 2 to the newly created accounts
 * Start full blockchain scan for Malice's address
-* Subscribe to new blocks from node2
+* subscribe to new blocks from node2
 * Remove node 2 peer from node 1
 * Transfer 10% of the ETH from Malice to Jane and send transaction to node 2 only (good one)
 * After 1 seconds, get Malice's balance from node 2 and ensure it reads 10% less
@@ -139,13 +140,21 @@ func TestDoubleSpend(t *testing.T) {
 	}
 	fmt.Println("Recorded txn ", tx.Hash().Hex(), " in blockNumber=", maliceTxnReceipt.BlockNumber.Int64())
 
+	b, err := GetBlock(client2, maliceTxnReceipt.BlockNumber.Int64())
+	if err != nil {
+		t.Log("Cannot find transaction", tx.Hash().Hex(), "in block", b.Number().Int64())
+		t.FailNow()
+	} else {
+		fmt.Println("Found transaction", tx.Hash().Hex(), "in block", b.Number().Int64())
+	}
 	maliceNode1Balance = GetBalance(client1, malice.Address)
 	fmt.Println("On node1 malice balance=", maliceNode1Balance)
 
 	fmt.Println("Starting monitoring on node2 for malice address ", malice.Address)
 
 	//start monitorning on node 2 malice's address
-	Monitor(wssClient2, client2, []string{malice.Address})
+	ch := make(chan<- cache.Item)
+	Monitor(wssClient2, client2, []string{malice.Address}, ch)
 
 	fmt.Println("Now monitoring ", malice.Address)
 

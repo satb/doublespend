@@ -36,7 +36,7 @@ This project simulates a double spend on a local 2 node ethereum network. The se
   * We have simulated a double spend on our local 2 node cluster
 
 * What happens when you run `go test`
-  * There is just a single test in the driver_test.go file which gets executed when you run `go test`
+  * In the eth module there is just a single test in the driver_test.go file which gets executed when you run `cd eth && go test`
   * This is what the test does
     * We make node1 be the bad one trying to do malicious things and node2 be the honest one.
     * Create a new address for Malice (the bad one trying the double spend), Bob, Jane and two accounts for getting the mining rewards eb1 (for node1) and eb2 (for node2)
@@ -57,6 +57,7 @@ This project simulates a double spend on a local 2 node ethereum network. The se
     * Then, node2 is added as a peer of node1 again.
     * TADA - Double spend detected
       * Internally, when the full blockchain scan happens for Malice's address, it keeps the history of Malice's transactions done
-      * When new block notifications arrive, the last transaction from the list of transactions is plucked (from the scan step above) and the transaction receipt fetched. 
+      * When new block notifications arrive, all cached transactions are run through and the transaction receipt fetched. 
       * If the transaction receipt cannot be fetched anymore, it is deemed a doublespend.
+      * The newly arrived transactions are then added to the cache again if they are of interest to the system.
 

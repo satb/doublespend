@@ -16,7 +16,7 @@ type EthError struct {
 	Message string `json:"message"`
 }
 
-type ethResponse struct {
+type EthResponse struct {
 	ID      string          `json:"id"`
 	JSONRPC string          `json:"jsonrpc"`
 	Result  json.RawMessage `json:"result"`
@@ -46,7 +46,7 @@ func getNodeInfo(clientUrl string) p2p.NodeInfo {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	var eresp ethResponse
+	var eresp EthResponse
 	err = json.Unmarshal(body, &eresp)
 	if err != nil {
 		log.Println("Error unmarshaling", err)
@@ -60,7 +60,7 @@ func getNodeInfo(clientUrl string) p2p.NodeInfo {
 	return nodeInfo
 }
 
-func setEtherBase(clientUrl string, address string) {
+func SetEtherBase(clientUrl string, address string) {
 	id := uuid.New()
 	params := [...]string{address}
 	message := map[string]interface{}{
@@ -144,7 +144,7 @@ func removePeer(clientUrl string, peerEnode string) {
 	log.Println(string(body))
 }
 
-func startMining(clientUrl string, numThreads int) {
+func StartMining(clientUrl string, numThreads int) {
 	id := uuid.New()
 	params := [...]int{numThreads}
 	message := map[string]interface{}{
@@ -172,7 +172,7 @@ func startMining(clientUrl string, numThreads int) {
 	log.Println(string(body))
 }
 
-func stopMining(clientUrl string) {
+func StopMining(clientUrl string) {
 	id := uuid.New()
 	params := [...]int{}
 	message := map[string]interface{}{

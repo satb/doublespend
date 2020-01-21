@@ -51,7 +51,7 @@ func deployContract(client *ethclient.Client, account eth.Account) string {
 	auth.GasLimit = uint64(600152) // in units
 	auth.GasPrice = gasPrice
 
-	address, tx, instance, err := DeployErc20(auth, client)
+	address, tx, instance, err := DeployTkn(auth, client)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -64,7 +64,7 @@ func deployContract(client *ethclient.Client, account eth.Account) string {
 
 func getBalance(client *ethclient.Client, contractAddress string, account eth.Account, addr string) {
 	tokenAddress := common.HexToAddress(contractAddress)
-	instance, err := NewToken(tokenAddress, client)
+	instance, err := NewErc20Caller(tokenAddress, client)
 	if err != nil {
 		log.Fatal(err, "Cannot create instance of erc20 instance for contract", contractAddress)
 	}
@@ -79,7 +79,8 @@ func getBalance(client *ethclient.Client, contractAddress string, account eth.Ac
 	//	return types.SignTx(tx, types.NewEIP155Signer(chainID), privKey)
 	//}
 
-	name, err := instance.Name(&bind.CallOpts{})
+	var nameStr string
+	err = instance.contract.Call(&bind.CallOpts{}, &nameStr, "name")
 	if err != nil {
 		log.Fatal(err, " .Can't get name ", contractAddress)
 	}
@@ -95,18 +96,20 @@ func getBalance(client *ethclient.Client, contractAddress string, account eth.Ac
 	//	log.Fatal(err)
 	//}
 
-	fmt.Println("************ name ***************", name)
+	fmt.Println("************ name ***************", nameStr)
 
 	//nonce, _ = client.PendingNonceAt(context.Background(), common.HexToAddress(account.Address))
-	address := common.HexToAddress(addr)
-	bal, err := instance.BalanceOf(&bind.CallOpts{}, address)
+	//address := common.HexToAddress(addr)
+	var balInt *big.Int
+	err = instance.contract.Call(&bind.CallOpts{}, balInt, "balanceOf", addr)
+
 	if err != nil {
-		log.Fatal(err, ". Cannot fetch balance from erc20 instance for contractAddress ", contractAddress, "at address ", addr)
+		log.Fatal(err, " .Can't get balance ", contractAddress)
 	}
 
-	fmt.Printf("name: %s\n", name) // "name: Golem Network"
+	fmt.Printf("name: %s\n", string(nameStr)) // "name: Golem Network"
 	//fmt.Printf("symbol: %s\n", symbol)     // "symbol: GNT"
-	fmt.Printf(" balance: %v\n", bal)
+	fmt.Printf(" balance: %v\n", balInt)
 
 }
 

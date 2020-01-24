@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"fmt"
-	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -15,7 +14,7 @@ import (
 	"math/big"
 )
 
-func Transfer(client *ethclient.Client, contractAddress string, pk string, to string, amount *big.Int) {
+func Transfer(client *ethclient.Client, contractAddress string, pk string, to string, amount *big.Int) string {
 	privateKey, err := crypto.HexToECDSA(pk)
 	if err != nil {
 		log.Fatal(err)
@@ -59,16 +58,18 @@ func Transfer(client *ethclient.Client, contractAddress string, pk string, to st
 	data = append(data, paddedAddress...)
 	data = append(data, paddedAmount...)
 
-	gasLimit, err := client.EstimateGas(context.Background(), ethereum.CallMsg{
-		To:   &tokenAddress,
-		Data: data,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(gasLimit) // 23256
+	fmt.Println("Estimating gas for tokenAddress=", contractAddress, " from=", fromAddress.Hex(), " to=", to, " amount=", amount.String())
 
-	tx := types.NewTransaction(nonce, tokenAddress, value, gasLimit, gasPrice, data)
+	//gasLimit, err := client.EstimateGas(context.Background(), ethereum.CallMsg{
+	//	To:   &tokenAddress,
+	//	Data: data,
+	//})
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//fmt.Println("Gas Limit", gasLimit)
+
+	tx := types.NewTransaction(nonce, tokenAddress, value, 800000, gasPrice, data)
 
 	chainID, err := client.NetworkID(context.Background())
 	if err != nil {
@@ -87,4 +88,5 @@ func Transfer(client *ethclient.Client, contractAddress string, pk string, to st
 
 	fmt.Printf("tx sent: %s", signedTx.Hash().Hex()) // tx sent: 0xa56316b637a94c4cc0331c73ef26389d6c097506d581073f927275e7a6ece0bc
 
+	return signedTx.Hash().Hex()
 }

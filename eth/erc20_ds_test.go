@@ -11,6 +11,7 @@ import (
 	"log"
 	"math/big"
 	"testing"
+	"time"
 	//"time"
 )
 
@@ -85,17 +86,73 @@ func deployContract(client *ethclient.Client, account Account) string {
 //
 //}
 
-func TestGetTokenBalance(t *testing.T) {
-	client2Url := "http://127.0.0.1:8101"
-	client2, err1 := ethclient.Dial(client2Url)
+//func TestGetTokenBalance(t *testing.T) {
+//	client1Url := "http://127.0.0.1:8101"
+//	client1, err1 := ethclient.Dial(client1Url)
+//	if err1 != nil {
+//		t.Log(err1)
+//		t.FailNow()
+//	}
+//	bal, err := erc20.TokenBalance(client1, "0x7c43f397564d6d0183a163a97c9f68a9da22d68e", "0x71191A62829c797D88F918A4170624B137a404D8")
+//	if err != nil {
+//		t.Log("Cannot fetch balance on account")
+//		t.FailNow()
+//	}
+//	fmt.Println("Balance is ", bal.String())
+//}
+
+func TestTokenTransfer(t *testing.T) {
+	client1Url := "http://127.0.0.1:8101"
+	client1, err1 := ethclient.Dial(client1Url)
 	if err1 != nil {
 		t.Log(err1)
 		t.FailNow()
 	}
-	bal, err := erc20.TokenBalance(client2, "0x7c43f397564d6d0183a163a97c9f68a9da22d68e", "0x71191A62829c797D88F918A4170624B137a404D8")
-	if err != nil {
-		t.Log("Cannot fetch balance on account")
+	malice := CreateAccount()
+	fmt.Println("Created addresses for malice address, privKey, pubKey", malice.Address, malice.PrivateKey, malice.PublicKey)
+	SetEtherBase(client1Url, malice.Address)
+	fmt.Println("Starting mining")
+	StartMining(client1Url, 1)
+
+	defer StopMining(client1Url)
+
+	//sleep 20 seconds to accumulate eth and stop mining
+	fmt.Println("Waiting for 20 seconds")
+	time.Sleep(20 * time.Second)
+	fmt.Println("After 20 seconds...")
+	maliceBalance := GetBalance(client1, malice.Address)
+	if maliceBalance == 0 {
+		t.Log("Malice has no balance to do anything")
 		t.FailNow()
 	}
-	fmt.Println("Balance is ", bal.String())
+	//eth.StopMining(client1Url)
+	//fmt.Println("Stopped mining on node1")
+
+	contractAddress := deployContract(client1, malice)
+
+	fmt.Println("Contract created, waiting for 20 seconds - ", contractAddress)
+	time.Sleep(20 * time.Second)
+
+	//Now create another address to transfer the tokens to
+	john := CreateAccount()
+	fmt.Println("Created addresses for John", john.Address)
+
+	transferTxnId := erc20.Transfer(client1, contractAddress, malice.PrivateKey, john.Address, big.NewInt(1000))
+
+	fmt.Println("Transferred from malice to john txnId=", transferTxnId)
+
+	fmt.Println("Waiting 20 seconds for transaction ", transferTxnId, " to be mined")
+	time.Sleep(20 * time.Second)
+
+	newMaliceTokenBalance, _ := erc20.TokenBalance(client1, contractAddress, malice.Address)
+	fmt.Println("Now malice token balance=", newMaliceTokenBalance.String())
+
+	johnTokenBalance, _ := erc20.TokenBalance(client1, contractAddress, john.Address)
+
+	if johnTokenBalance.Cmp(big.NewInt(0)) == 0 {
+		t.Log("John token balance is 0. Transfer failed")
+		t.FailNow()
+	}
+
+	fmt.Println("Now John token balance=", johnTokenBalance.String())
 }

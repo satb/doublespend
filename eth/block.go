@@ -6,7 +6,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"log"
 	"math/big"
-	"strings"
 )
 
 func getBlock(client *ethclient.Client, blockNum int64) (block *types.Block, err error) {
@@ -14,8 +13,8 @@ func getBlock(client *ethclient.Client, blockNum int64) (block *types.Block, err
 	return client.BlockByNumber(context.Background(), blockNumber)
 }
 
-func scan(client *ethclient.Client, addresses []string) {
-	log.Println("Started scan")
+func startFullScan(client *ethclient.Client, addresses []string) {
+	log.Println("Started startFullScan")
 	header, err := client.HeaderByNumber(context.Background(), nil)
 	if err != nil {
 		log.Fatal(err)
@@ -27,22 +26,9 @@ func scan(client *ethclient.Client, addresses []string) {
 			log.Println(err)
 			continue
 		}
-		for _, tx := range block.Transactions() {
-			chainID, err := client.NetworkID(context.Background())
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-			if msg, err := tx.AsMessage(types.NewEIP155Signer(chainID)); err == nil {
-				from := strings.ToLower(msg.From().Hex())
-				_, found := find(addresses, from)
-				if found {
-					cacheNewTxn(from, tx, block)
-				}
-			}
-		}
+		cacheNewTxs(client, addresses, block)
 	}
-	log.Println("Completed scan")
+	log.Println("Completed startFullScan")
 }
 
 func subscribe(client *ethclient.Client, channel chan<- *types.Block) {

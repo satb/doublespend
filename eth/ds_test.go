@@ -20,7 +20,7 @@ import (
 * Start mining for 10 seconds so Malice and Bob have some ETH
 * Stop mining
 * Set etherbase accounts for node 1 and node 2 to the newly created accounts
-* Start full blockchain scan for Malice's address
+* Start full blockchain startFullScan for Malice's address
 * subscribe to new blocks from node2
 * Remove node 2 peer from node 1
 * Transfer 10% of the ETH from Malice to Jane and send transaction to node 2 only (good one)

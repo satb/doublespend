@@ -32,8 +32,8 @@ type TxnInfo struct {
 }
 
 func Monitor(wssClient *ethclient.Client, httpClient *ethclient.Client, addresses []string, ch chan<- cache.Item) {
-	//1. full scan for addresses of interest
-	scan(httpClient, addresses)
+	//1. full startFullScan for addresses of interest
+	startFullScan(httpClient, addresses)
 	//2. subscribe to new blocks
 	messages := make(chan *types.Block, 20)
 	go func() {

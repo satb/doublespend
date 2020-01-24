@@ -1,22 +1,32 @@
 package eth
 
 import (
-	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/satb/doublespend/cache"
+	"github.com/satb/doublespend/erc20"
 	"log"
+	"strings"
 )
 
-func cacheTxn(from string, tx *types.Transaction, block *types.Block) {
-	log.Println("Caching new txn with id ", tx.Hash().Hex())
-	blockNumber := block.Number()
-	ethCache.AddItem(from, cache.Item{
-		Id:          tx.Hash().Hex(),
-		From:        from,
-		To:          tx.To().Hex(),
-		Amount:      *tx.Value(),
-		BlockNum:    blockNumber.Int64(),
-		Time:        block.Header().Time,
-		DoubleSpend: false,
+var (
+	logTransferSig     = []byte("Transfer(address,address,uint256)")
+	logTransferSigHash = crypto.Keccak256Hash(logTransferSig)
+	contractAbi, _     = abi.JSON(strings.NewReader(erc20.Erc20ABI))
+)
+
+func cacheNewTxn(tx TxnInfo) {
+	log.Println("Caching new txn with id ", tx.txn.Hash().Hex())
+	ethCache.AddItem(tx.from, cache.Item{
+		Id:              tx.txn.Hash().Hex(),
+		From:            tx.from,
+		To:              tx.to,
+		Amount:          *tx.amount,
+		BlockNum:        tx.blockNum,
+		Time:            tx.time,
+		DoubleSpend:     false,
+		Confirmations:   tx.numConfirmations,
+		ContractAddress: tx.contractAddress,
 	})
 }
 

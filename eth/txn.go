@@ -62,3 +62,18 @@ func transfer(client *ethclient.Client, from Account, to string, ethAmount int64
 func getTxnReceipt(client *ethclient.Client, hash common.Hash) (receipt *types.Receipt, err error) {
 	return client.TransactionReceipt(context.Background(), hash)
 }
+
+func TxnFrom(client *ethclient.Client, tx *types.Transaction) (from string, err error) {
+
+	chainID, err := client.NetworkID(context.Background())
+
+	if err != nil {
+		return "", err
+	}
+
+	if msg, err := tx.AsMessage(types.NewEIP155Signer(chainID)); err == nil {
+		return msg.From().Hex(), nil
+	}
+
+	return "", err
+}

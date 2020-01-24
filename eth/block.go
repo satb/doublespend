@@ -37,7 +37,7 @@ func scan(client *ethclient.Client, addresses []string) {
 				from := strings.ToLower(msg.From().Hex())
 				_, found := find(addresses, from)
 				if found {
-					cacheTxn(from, tx, block)
+					cacheNewTxn(from, tx, block)
 				}
 			}
 		}

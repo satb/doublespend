@@ -24,16 +24,16 @@ type Cache struct {
 }
 
 type Item struct {
-	Id          string
-	From        string
-	To          string
-	Amount      big.Int
-	BlockNum    int64
-	Time        uint64
-	DoubleSpend bool
+	Id              string
+	From            string
+	To              string
+	Amount          big.Int
+	BlockNum        int64
+	Time            uint64
+	DoubleSpend     bool
+	ContractAddress string //if the txn is a contract, then the address of the contract
+	Confirmations   int    //how many confirmations before signaling doublespend
 }
-
-type updateFn func(Item) Item
 
 const ItemSize = 0
 const DefaultRetainPeriod uint64 = 24 * 60 * 60 * 1000

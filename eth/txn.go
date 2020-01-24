@@ -72,7 +72,7 @@ func TxnFrom(client *ethclient.Client, tx *types.Transaction) (from string, err 
 	}
 
 	if msg, err := tx.AsMessage(types.NewEIP155Signer(chainID)); err == nil {
-		return msg.From().Hex(), nil
+		return strings.ToLower(msg.From().Hex()), nil
 	}
 
 	return "", err

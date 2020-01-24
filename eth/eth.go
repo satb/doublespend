@@ -62,6 +62,7 @@ On the arrival of the new block, this function is responsible for
 4. Add the new transactions, if any, that originated from the set of addresses of interest
 */
 func processBlock(client *ethclient.Client, addresses []string, block *types.Block, ch chan<- cache.Item) {
+	//log.Println("new block mined - ", block.Number(), " and num txns with interested addr of", addresses[0], " are ", len(ethCache.Get(addresses[0])))
 	for _, address := range addresses {
 		addr := strings.ToLower(address)
 		if ethCache.Get(addr) != nil {
@@ -189,7 +190,6 @@ func cacheNewTxs(client *ethclient.Client, addresses []string, block *types.Bloc
 	totalValue := blockTxnValue(block.Transactions())
 	blockTxns = append(blockTxns, processEth(client, addresses, block, totalValue)...)
 	blockTxns = append(blockTxns, processErc(client, addresses, block, totalValue)...)
-
 	for _, tx := range blockTxns {
 		cacheNewTxn(tx)
 	}

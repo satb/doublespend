@@ -31,7 +31,7 @@ This project simulates a double spend on a local 2 node ethereum network. The se
         "number": "0x0",
         "gasUsed": "0x0",
         "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
-        }```
+        }
   * Create the data directories to hold the data for the ethereum nodes
     * `mkdir -p /tmp/eth/60/01 && mkdir -p /tmp/eth/60/02`
 

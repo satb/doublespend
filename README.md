@@ -3,7 +3,7 @@ This project simulates a double spend on a local 2 node ethereum network. The se
 * Setup
   * Download the ethereum geth repo and build to get the geth binary https://github.com/ethereum/go-ethereum/wiki/Installing-Geth#build-it-from-source-code
   * Create a new genesis file like so and save it to /tmp/genesis.json (or whatever other folder):
-    * `{
+    * ```{
         "config": {
             "chainId": 15,
             "homesteadBlock": 0,
@@ -31,7 +31,7 @@ This project simulates a double spend on a local 2 node ethereum network. The se
         "number": "0x0",
         "gasUsed": "0x0",
         "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
-        }`
+        }```
   * Create the data directories to hold the data for the ethereum nodes
     * `mkdir -p /tmp/eth/60/01 && mkdir -p /tmp/eth/60/02`
 

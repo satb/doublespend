@@ -12,7 +12,7 @@ import (
 var (
 	logTransferSig     = []byte("Transfer(address,address,uint256)")
 	logTransferSigHash = crypto.Keccak256Hash(logTransferSig)
-	contractAbi, _     = abi.JSON(strings.NewReader(erc20.Erc20ABI))
+	contractAbi, _     = abi.JSON(strings.NewReader(erc20.TokenABI))
 )
 
 func cacheNewTxn(tx TxnInfo) {

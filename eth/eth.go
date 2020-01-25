@@ -1,6 +1,7 @@
 package eth
 
 import (
+	"fmt"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -62,7 +63,6 @@ On the arrival of the new block, this function is responsible for
 4. Add the new transactions, if any, that originated from the set of addresses of interest
 */
 func processBlock(client *ethclient.Client, addresses []string, block *types.Block, ch chan<- cache.Item) {
-	//log.Println("new block mined - ", block.Number(), " and num txns with interested addr of", addresses[0], " are ", len(ethCache.Get(addresses[0])))
 	for _, address := range addresses {
 		addr := strings.ToLower(address)
 		if ethCache.Get(addr) != nil {
@@ -153,13 +153,15 @@ func processErc(client *ethclient.Client, addresses []string, block *types.Block
 		from, err := TxnFrom(client, tx)
 		if err == nil {
 			_, found := find(addresses, from)
-			if found == true && tx.Value().Cmp(big.NewInt(0)) == 0 {
+			if found && tx.Value().Cmp(big.NewInt(0)) == 0 {
 				receipt, err := getTxnReceipt(client, tx.Hash())
 				if err != nil {
 					log.Println("Could not fetch transaction receipt for ", tx.Hash().Hex())
 					continue
 				}
 				transferLogs := ExtractTransferLog(receipt)
+				fmt.Println("Found for txId ane extracted logs of log size", tx.Hash().Hex(), len(transferLogs))
+
 				for _, txLog := range transferLogs {
 					if strings.ToLower(txLog.From.Hex()) == strings.ToLower(from) {
 						blockTxns = append(blockTxns, TxnInfo{
@@ -185,7 +187,6 @@ func processErc(client *ethclient.Client, addresses []string, block *types.Block
 }
 
 func cacheNewTxs(client *ethclient.Client, addresses []string, block *types.Block) {
-
 	blockTxns := make([]TxnInfo, 0)
 	totalValue := blockTxnValue(block.Transactions())
 	blockTxns = append(blockTxns, processEth(client, addresses, block, totalValue)...)

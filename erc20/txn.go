@@ -58,17 +58,6 @@ func Transfer(client *ethclient.Client, contractAddress string, pk string, to st
 	data = append(data, paddedAddress...)
 	data = append(data, paddedAmount...)
 
-	fmt.Println("Estimating gas for tokenAddress=", contractAddress, " from=", fromAddress.Hex(), " to=", to, " amount=", amount.String())
-
-	//gasLimit, err := client.EstimateGas(context.Background(), ethereum.CallMsg{
-	//	To:   &tokenAddress,
-	//	Data: data,
-	//})
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//fmt.Println("Gas Limit", gasLimit)
-
 	tx := types.NewTransaction(nonce, tokenAddress, value, 800000, gasPrice, data)
 
 	chainID, err := client.NetworkID(context.Background())

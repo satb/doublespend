@@ -26,7 +26,8 @@ func ExtractTransferLog(receipt *types.Receipt) []LogTransfer {
 
 			err := contractAbi.Unpack(&transferEvent, "Transfer", vLog.Data)
 			if err != nil {
-				log.Fatal(err)
+				log.Println("ERROR", err)
+				return txLogs
 			}
 
 			transferEvent.From = common.HexToAddress(vLog.Topics[1].Hex())

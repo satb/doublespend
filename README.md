@@ -4,39 +4,54 @@ This project simulates a double spend on a local 2 node ethereum network. The se
   * Download the ethereum geth repo and build to get the geth binary https://github.com/ethereum/go-ethereum/wiki/Installing-Geth#build-it-from-source-code
   * Create a new genesis file like so and save it to /tmp/genesis.json (or whatever other folder):
     * `{
-            "config": {
-                "chainId": 15,
-                "homesteadBlock": 0,
-                "eip150Block": 0,
-                "eip155Block": 0,
-                "eip158Block": 0
-            },
-            "difficulty": "100",
-            "gasLimit": "2100000",
-            "alloc": {
-                "7df9a875a174b3bc565e6424a0050ebc1b2d1d82": { "balance": "300000" },
-                "f41c74c9ae680c1aa78f42e5647a62f353b7bdde": { "balance": "400000" }
+        "config": {
+            "chainId": 15,
+            "homesteadBlock": 0,
+            "eip150Block": 0,
+            "eip150Hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "eip155Block": 0,
+            "eip158Block": 0,
+            "byzantiumBlock": 0,
+            "constantinopleBlock": 0,
+            "petersburgBlock": 0,
+            "ethash": {}
+        },
+        "nonce": "0x0",
+        "timestamp": "0x5b0e9dce",
+        "extraData": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "gasLimit": "0xE0000000",
+        "difficulty": "1200",
+        "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "coinbase": "0x0000000000000000000000000000000000000000",
+        "alloc": {
+            "0000000000000000000000000000000000000000": {
+            "balance": "0x1"
             }
+        },
+        "number": "0x0",
+        "gasUsed": "0x0",
+        "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
         }`
   * Create the data directories to hold the data for the ethereum nodes
     * `mkdir -p /tmp/eth/60/01 && mkdir -p /tmp/eth/60/02`
 
 * Running two ethereum nodes locally
   * Bootstrap the ethereum nodes with the genesis file created above like so:
-    * `./build/bin/geth --identity "node1" --nodiscover --datadir /tmp/eth/60/01 init /tmp/genesis.json`
-    * `./build/bin/geth --identity "node2" --nodiscover --datadir /tmp/eth/60/02 init /tmp/genesis.json`
+    * `rm -rf /tmp/eth/60/01 && $HOME/go/src/github.com/go-ethereum/build/bin/geth --identity "node1" --nodiscover --datadir /tmp/eth/60/01 init $HOME/dev/scripts/eth_genesis.json`
+    * `rm -rf /tmp/eth/60/02 && $HOME/go/src/github.com/go-ethereum/build/bin/geth --identity "node2" --nodiscover --datadir /tmp/eth/60/02 init $HOME/dev/scripts/eth_genesis.json`
   * Now you are ready to run the local ethereum nodes
-    *  `./build/bin/geth --datadir="/tmp/eth/60/01" --networkid 15 --nodiscover --ws  --wsaddr 127.0.0.1 --wsport 4101 --wsapi "eth,net,web3,admin,shh" --rpc --rpcapi 'personal,db,eth,net,web3,admin,miner,txpool' --ipcdisable --port 30301 --rpcaddr 127.0.0.1 --rpcport 8101  --allow-insecure-unlock console 2>> /tmp/eth/60/01.log`
-    * `./build/bin/geth --datadir="/tmp/eth/60/02" --networkid 15 --nodiscover --ws  --wsaddr 127.0.0.1 --wsport 4102 --wsapi "eth,net,web3,admin,shh" --wsorigins "*"  --rpc --rpcapi 'personal,db,eth,net,web3,admin,miner,txpool' --ipcdisable --port 30302 --rpcaddr 127.0.0.1 --rpcport 8102 --allow-insecure-unlock console 2>> /tmp/eth/60/02.log `
+    *  `$HOME/go/src/github.com/go-ethereum/build/bin/geth --datadir="/tmp/eth/60/01" --networkid 15 --nodiscover --ws  --wsaddr 127.0.0.1 --wsport 4101 --wsapi "eth,net,web3,admin,shh" --rpc --rpcapi 'personal,db,eth,net,web3,admin,miner,txpool' --ipcdisable --port 30301 --rpcaddr 127.0.0.1 --rpcport 8101  --nat=extip:127.0.0.1 --allow-insecure-unlock console 2>> /tmp/eth/60/01.log`
+    * `$HOME/go/src/github.com/go-ethereum/build/bin/geth --datadir="/tmp/eth/60/02" --networkid 15 --nodiscover --ws  --wsaddr 127.0.0.1 --wsport 4102 --wsapi "eth,net,web3,admin,shh" --wsorigins "*"  --rpc --rpcapi 'personal,db,eth,net,web3,admin,miner,txpool' --ipcdisable --port 30302 --rpcaddr 127.0.0.1 --rpcport 8102 --nat=extip:127.0.0.1 --allow-insecure-unlock console 2>> /tmp/eth/60/02.log`
 
 * Next clone this project and build it - `go build` and ensure there are no errors.
 
-* Next just run `go test`
+# Testing ETH Double Spend
+* Next just run `go test -run TestDoubleSpend`
   * A few messages will scroll by and you will see the message "DOUBLE SPEND DETECTED" scroll by. 
   * We have simulated a double spend on our local 2 node cluster
 
-* What happens when you run `go test`
-  * In the eth module there is just a single test in the ds_test.go file which gets executed when you run `cd eth && go test`
+* What happens when you run `go test -run TestDoubleSpend`
+  * In the eth module there is just a single test in the ds_test.go file for which gets executed when you run `cd eth && go test -run TestDoubleSpend`
   * This is what the test does
     * We make node1 be the bad one trying to do malicious things and node2 be the honest one.
     * Create a new address for Malice (the bad one trying the double spend), Bob, Jane and two accounts for getting the mining rewards eb1 (for node1) and eb2 (for node2)
@@ -61,4 +76,9 @@ This project simulates a double spend on a local 2 node ethereum network. The se
       * If the transaction receipt cannot be fetched anymore, it is deemed a doublespend.
       * The newly arrived transactions are then added to the cache again if they are of interest to the system.
       * The cache is purged if it has transactions beyond 24 hrs for any of the addresses that are of interest
+
+# Testing ERC-20 Double Spend
+  * ERC-20 double spend is different in the way the setup works, but the strategy employed is the same
+  * First spin up two nodes like for ETH double spend, then create the test accounts, deploy the erc-20 smart contracts, spend the erc-20 tokens, start monitoring the blockchain, partition the network, overpower the hash power of node2 by node1, spend on node1, force node2 to accept the new chain from node1 that had the doublespend
+  *  `go test -run TestErc20DoubleSpend`
 
